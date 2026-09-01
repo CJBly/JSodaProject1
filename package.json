@@ -1,0 +1,11 @@
+{
+  "name": "gear-tracker",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "sqlite3": "^6.0.1"
+  }
+}
