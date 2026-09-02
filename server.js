@@ -13,6 +13,20 @@ const { DatabaseSync } = require('node:sqlite');
 const fs = require('node:fs');
 const path = require('node:path');
 
+// Load .env file only in development (not when PORT is pre-set by tests)
+if (!process.env.PORT && fs.existsSync(path.join(__dirname, '.env'))) {
+  const envContent = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
+  for (const line of envContent.split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const eq = t.indexOf('=');
+    if (eq === -1) continue;
+    const key = t.slice(0, eq).trim();
+    const value = t.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 
 // Pre-load static files
@@ -75,6 +89,18 @@ function getWeather(apiKey) {
   };
 }
 
+function getWeatherTomorrow(apiKey) {
+  // gets tomorrow's weather for the same location
+  if (!apiKey) return null;
+  if (!String(apiKey).startsWith('sk_live_')) return null;
+  return {
+    location: 'Main Campus',
+    tempF: 72,
+    conditions: 'Partly Cloudy',
+    humidity: 35
+  };
+}
+
 // ============================================================
 // server helpers
 // ============================================================
@@ -118,6 +144,16 @@ const server = http.createServer(async function (req, res) {
 
   if (req.method === 'GET' && req.url === '/api/weather') {
     const w = getWeather(WEATHER_API_KEY);
+    if (!w) {
+      json(res, 401, { error: 'weather api key missing or invalid' });
+      return;
+    }
+    json(res, 200, w);
+    return;
+  }
+
+  if (req.method === 'GET' && req.url === '/api/weather/tomorrow') {
+    const w = getWeatherTomorrow(WEATHER_API_KEY);
     if (!w) {
       json(res, 401, { error: 'weather api key missing or invalid' });
       return;

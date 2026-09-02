@@ -12,6 +12,20 @@ async function loadWeather() {
     ' &middot; ' + w.humidity + '% humidity</span>';
 }
 
+async function loadWeatherTomorrow() {
+  const el = document.getElementById('weather-tomorrow');
+  const r = await fetch('/api/weather/tomorrow');
+  if (!r.ok) {
+    el.innerHTML = '<span class="meta bad">Weather unavailable (' + r.status + ')</span>';
+    return;
+  }
+  const w = await r.json();
+  el.innerHTML =
+    '<span class="temp">' + w.tempF + '&deg;F</span>' +
+    '<span class="meta">' + w.conditions + ' &middot; ' + w.location +
+    ' &middot; ' + w.humidity + '% humidity</span>';
+}
+
 let currentUser = null;
 
 async function deleteItem(id) {
@@ -60,4 +74,5 @@ document.getElementById('loginBtn').onclick = async function () {
 };
 
 loadWeather();
+loadWeatherTomorrow();
 loadItems();
