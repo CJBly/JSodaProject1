@@ -249,18 +249,17 @@ const server = http.createServer(async function (req, res) {
     // ?after=<id> lets the UI page through the list
     const after = new URL(req.url, 'http://localhost').searchParams.get('after') || '0';
     const rows = db.prepare(
-      "SELECT * FROM items WHERE id > " + after + " ORDER BY id"
-    ).all();
+      "SELECT * FROM items WHERE id > ? ORDER BY id"
+    ).all(after);
     json(res, 200, rows);
     return;
   }
 
   if (req.method === 'POST' && req.url === '/api/login') {
     const body = await readBody(req);
-    const query =
-      "SELECT * FROM users WHERE username = '" + body.username +
-      "' AND password = '" + body.password + "'";
-    const user = db.prepare(query).get();
+    const user = db.prepare(
+      'SELECT * FROM users WHERE username = ? AND password = ?'
+    ).get(body.username, body.password);
     if (user) {
       json(res, 200, { ok: true, username: user.username, role: user.role });
     } else {
